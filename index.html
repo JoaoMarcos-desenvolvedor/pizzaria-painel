@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leblon Prime - Nuvem</title>
-    <!-- Bibliotecas Oficiais do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -20,17 +19,12 @@
         .edit-box { width: 100%; height: 250px; background: #1e222b; padding: 10px; border-radius: 4px; border: 1px solid #57606f; font-family: monospace; font-size: 13px; color: #f1f2f6; resize: vertical; box-sizing: border-box; margin-bottom: 10px; }
         .edit-box:focus { border-color: #e74c3c; outline: none; }
         
-        /* Estilos dos Botões */
         .btn-imprimir { background: #e74c3c; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-bottom: 10px; }
         .btn-imprimir:hover { background: #c0392b; }
         
         .btn-excluir { background: #7f8c8d; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 13px; }
         .btn-excluir:hover { background: #95a5a6; color: #c0392b; }
         
-        /* Botão Perigoso (Limpar Tudo) */
-        .btn-limpar-tudo { background: #c0392b; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; border: 1px solid #e74c3c; }
-        .btn-limpar-tudo:hover { background: #a5281b; }
-
         .aviso-edit { font-size: 11px; color: #a4b0be; margin-bottom: 5px; display: block; font-style: italic; }
     </style>
 </head>
@@ -50,14 +44,11 @@
                 <option value="8">8 linhas</option>
             </select>
         </div>
-        <!-- Novo Botão de Limpar Tudo -->
-        <button class="btn-limpar-tudo" onclick="limparPainel()">🗑️ Limpar Todos os Pedidos</button>
     </div>
 
     <div class="grid" id="pedidos-container">Conectando à nuvem...</div>
 
     <script>
-        // Configuração COMPLETA do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBaoqTkIVcr-Bop8UWkexg7w3G-OAmvMjk",
             authDomain: "leblonprimepizza.firebaseapp.com",
@@ -68,11 +59,9 @@
             appId: "1:292228771003:web:c3431afe1725f6a1350d9e"
         };
         
-        // Inicializa o Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Escuta os pedidos na nuvem
         db.ref("pedidos_pendentes").limitToLast(15).on("value", (snapshot) => {
             const container = document.getElementById('pedidos-container');
             container.innerHTML = "";
@@ -111,7 +100,6 @@
             }
         });
 
-        // Função para formatar e enviar para impressão
         function salvarEImprimir(key) {
             const novoTextoPuro = document.getElementById('txt-' + key).value;
             const cabecalho = document.getElementById('cfg-cabecalho').value;
@@ -119,12 +107,16 @@
 
             let textoFormatado = "\n\n\n";
             if (cabecalho) {
+                // Centraliza e aplica Negrito
                 textoFormatado += `\x1B\x61\x01\x1B\x45\x01${cabecalho}\x1B\x45\x00\n\x1B\x61\x00--------------------------------\n`;
             }
             
             textoFormatado += novoTextoPuro;
             const quebras = "\n".repeat(linhas);
             textoFormatado += quebras;
+
+            // COMANDO DA GUILHOTINA (Corte Parcial)
+            textoFormatado += "\x1B\x6D";
 
             db.ref("pedidos_pendentes/" + key).update({
                 textoPuro: novoTextoPuro,
@@ -137,10 +129,8 @@
             });
         }
 
-        // Função para Excluir um único pedido
         function excluirPedido(key) {
             const confirmacao = confirm("Tem certeza que deseja apagar este pedido? Ele sumirá do painel e da nuvem.");
-            
             if (confirmacao) {
                 db.ref("pedidos_pendentes/" + key).remove()
                 .then(() => {
@@ -148,22 +138,6 @@
                 })
                 .catch(err => {
                     alert("Erro ao excluir: " + err.message);
-                });
-            }
-        }
-
-        // Nova Função para Limpar TODO o painel
-        function limparPainel() {
-            const confirmacao = confirm("⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS OS PEDIDOS? Essa ação limpará o banco de dados e não pode ser desfeita.");
-            
-            if (confirmacao) {
-                db.ref("pedidos_pendentes").remove()
-                .then(() => {
-                    // Não precisa de alert se não quiser, a tela vai limpar na hora
-                    console.log("Todos os pedidos foram apagados.");
-                })
-                .catch(err => {
-                    alert("Erro ao limpar os pedidos: " + err.message);
                 });
             }
         }
