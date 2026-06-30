@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leblon Prime - Nuvem</title>
-    <!-- Bibliotecas Oficiais do Firebase (Versão 8 Compatível) -->
+    <!-- Bibliotecas Oficiais do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -45,7 +45,7 @@
     <div class="grid" id="pedidos-container">Conectando à nuvem...</div>
 
     <script>
-        // Configuração COMPLETA e limpa do Firebase
+        // Configuração COMPLETA do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBaoqTkIVcr-Bop8UWkexg7w3G-OAmvMjk",
             authDomain: "leblonprimepizza.firebaseapp.com",
@@ -96,7 +96,8 @@
 
             let textoFormatado = "\n\n\n";
             if (cabecalho) {
-                textoFormatado += \`\\x1B\\x61\\x01\\x1D\\x21\\x11\${cabecalho}\\n\\x1D\\x21\\x00\\x1B\\x61\\x00--------------------------------\\n\`;
+                // Aqui está a linha corrigida sem erros de escape!
+                textoFormatado += `\x1B\x61\x01\x1D\x21\x11${cabecalho}\n\x1D\x21\x00\x1B\x61\x00--------------------------------\n`;
             }
             textoFormatado += novoTextoPuro;
             const quebras = "\n".repeat(linhas);
