@@ -27,6 +27,10 @@
         .btn-excluir { background: #7f8c8d; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 13px; }
         .btn-excluir:hover { background: #95a5a6; color: #c0392b; }
         
+        /* Botão Perigoso (Limpar Tudo) */
+        .btn-limpar-tudo { background: #c0392b; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; border: 1px solid #e74c3c; }
+        .btn-limpar-tudo:hover { background: #a5281b; }
+
         .aviso-edit { font-size: 11px; color: #a4b0be; margin-bottom: 5px; display: block; font-style: italic; }
     </style>
 </head>
@@ -46,6 +50,8 @@
                 <option value="8">8 linhas</option>
             </select>
         </div>
+        <!-- Novo Botão de Limpar Tudo -->
+        <button class="btn-limpar-tudo" onclick="limparPainel()">🗑️ Limpar Todos os Pedidos</button>
     </div>
 
     <div class="grid" id="pedidos-container">Conectando à nuvem...</div>
@@ -72,7 +78,6 @@
             container.innerHTML = "";
             let temPedidos = false;
 
-            // Transforma os dados em array para inverter a ordem (mais novos no topo)
             const pedidosArray = [];
             snapshot.forEach((childSnapshot) => {
                 pedidosArray.push({
@@ -81,13 +86,11 @@
                 });
             });
 
-            // Reverte a ordem
             pedidosArray.reverse().forEach((item) => {
                 temPedidos = true;
                 const pedido = item.data;
                 const key = item.key;
                 
-                // Exibe sempre a versão limpa do texto no painel
                 const textoExibicao = pedido.textoPuro || pedido.texto; 
 
                 const card = document.createElement("div");
@@ -116,10 +119,6 @@
 
             let textoFormatado = "\n\n\n";
             if (cabecalho) {
-                // \x1B\x61\x01 = Centraliza
-                // \x1B\x45\x01 = Ativa Negrito
-                // \x1B\x45\x00 = Desativa Negrito
-                // \x1B\x61\x00 = Alinha à esquerda
                 textoFormatado += `\x1B\x61\x01\x1B\x45\x01${cabecalho}\x1B\x45\x00\n\x1B\x61\x00--------------------------------\n`;
             }
             
@@ -138,18 +137,33 @@
             });
         }
 
-        // Nova Função para Excluir o Pedido
+        // Função para Excluir um único pedido
         function excluirPedido(key) {
             const confirmacao = confirm("Tem certeza que deseja apagar este pedido? Ele sumirá do painel e da nuvem.");
             
             if (confirmacao) {
                 db.ref("pedidos_pendentes/" + key).remove()
                 .then(() => {
-                    // O Firebase avisa o painel automaticamente e o card some na hora
                     console.log("Pedido " + key + " apagado com sucesso.");
                 })
                 .catch(err => {
                     alert("Erro ao excluir: " + err.message);
+                });
+            }
+        }
+
+        // Nova Função para Limpar TODO o painel
+        function limparPainel() {
+            const confirmacao = confirm("⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS OS PEDIDOS? Essa ação limpará o banco de dados e não pode ser desfeita.");
+            
+            if (confirmacao) {
+                db.ref("pedidos_pendentes").remove()
+                .then(() => {
+                    // Não precisa de alert se não quiser, a tela vai limpar na hora
+                    console.log("Todos os pedidos foram apagados.");
+                })
+                .catch(err => {
+                    alert("Erro ao limpar os pedidos: " + err.message);
                 });
             }
         }
