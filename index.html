@@ -19,8 +19,14 @@
         .card { background: #3f4452; border-radius: 8px; padding: 15px; border-left: 5px solid #e74c3c; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .edit-box { width: 100%; height: 250px; background: #1e222b; padding: 10px; border-radius: 4px; border: 1px solid #57606f; font-family: monospace; font-size: 13px; color: #f1f2f6; resize: vertical; box-sizing: border-box; margin-bottom: 10px; }
         .edit-box:focus { border-color: #e74c3c; outline: none; }
-        button { background: #e74c3c; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; }
-        button:hover { background: #c0392b; }
+        
+        /* Estilos dos Botões */
+        .btn-imprimir { background: #e74c3c; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-bottom: 10px; }
+        .btn-imprimir:hover { background: #c0392b; }
+        
+        .btn-excluir { background: #7f8c8d; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 13px; }
+        .btn-excluir:hover { background: #95a5a6; color: #c0392b; }
+        
         .aviso-edit { font-size: 11px; color: #a4b0be; margin-bottom: 5px; display: block; font-style: italic; }
     </style>
 </head>
@@ -60,17 +66,28 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Escuta os pedidos
+        // Escuta os pedidos na nuvem
         db.ref("pedidos_pendentes").limitToLast(15).on("value", (snapshot) => {
             const container = document.getElementById('pedidos-container');
             container.innerHTML = "";
             let temPedidos = false;
 
+            // Transforma os dados em array para inverter a ordem (mais novos no topo)
+            const pedidosArray = [];
             snapshot.forEach((childSnapshot) => {
+                pedidosArray.push({
+                    key: childSnapshot.key,
+                    data: childSnapshot.val()
+                });
+            });
+
+            // Reverte a ordem
+            pedidosArray.reverse().forEach((item) => {
                 temPedidos = true;
-                const pedido = childSnapshot.val();
-                const key = childSnapshot.key;
+                const pedido = item.data;
+                const key = item.key;
                 
+                // Exibe sempre a versão limpa do texto no painel
                 const textoExibicao = pedido.textoPuro || pedido.texto; 
 
                 const card = document.createElement("div");
@@ -79,9 +96,11 @@
                     <h3>${new Date(pedido.dataHora).toLocaleTimeString()} - Status: ${pedido.impresso ? '✅ Impresso' : '⏳ Aguardando'}</h3>
                     <span class="aviso-edit">✍️ Edite se necessário e reenvie para a impressora</span>
                     <textarea id="txt-${key}" class="edit-box">${textoExibicao}</textarea>
-                    <button onclick="salvarEImprimir('${key}')">🖨️ Enviar para Impressora</button>
+                    
+                    <button class="btn-imprimir" onclick="salvarEImprimir('${key}')">🖨️ Enviar para Impressora</button>
+                    <button class="btn-excluir" onclick="excluirPedido('${key}')">🗑️ Excluir Pedido</button>
                 `;
-                container.insertBefore(card, container.firstChild);
+                container.appendChild(card);
             });
 
             if(!temPedidos) {
@@ -89,6 +108,7 @@
             }
         });
 
+        // Função para formatar e enviar para impressão
         function salvarEImprimir(key) {
             const novoTextoPuro = document.getElementById('txt-' + key).value;
             const cabecalho = document.getElementById('cfg-cabecalho').value;
@@ -96,9 +116,13 @@
 
             let textoFormatado = "\n\n\n";
             if (cabecalho) {
-                // Aqui está a linha corrigida sem erros de escape!
-                textoFormatado += `\x1B\x61\x01\x1D\x21\x11${cabecalho}\n\x1D\x21\x00\x1B\x61\x00--------------------------------\n`;
+                // \x1B\x61\x01 = Centraliza
+                // \x1B\x45\x01 = Ativa Negrito
+                // \x1B\x45\x00 = Desativa Negrito
+                // \x1B\x61\x00 = Alinha à esquerda
+                textoFormatado += `\x1B\x61\x01\x1B\x45\x01${cabecalho}\x1B\x45\x00\n\x1B\x61\x00--------------------------------\n`;
             }
+            
             textoFormatado += novoTextoPuro;
             const quebras = "\n".repeat(linhas);
             textoFormatado += quebras;
@@ -112,6 +136,22 @@
             }).catch(err => {
                 alert("Erro ao enviar: " + err.message);
             });
+        }
+
+        // Nova Função para Excluir o Pedido
+        function excluirPedido(key) {
+            const confirmacao = confirm("Tem certeza que deseja apagar este pedido? Ele sumirá do painel e da nuvem.");
+            
+            if (confirmacao) {
+                db.ref("pedidos_pendentes/" + key).remove()
+                .then(() => {
+                    // O Firebase avisa o painel automaticamente e o card some na hora
+                    console.log("Pedido " + key + " apagado com sucesso.");
+                })
+                .catch(err => {
+                    alert("Erro ao excluir: " + err.message);
+                });
+            }
         }
     </script>
 </body>
