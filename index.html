@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leblon Prime - Nuvem</title>
-    <!-- Bibliotecas Oficiais do Firebase -->
+    <!-- Bibliotecas Oficiais do Firebase (Versão 8 Compatível) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -45,9 +45,7 @@
     <div class="grid" id="pedidos-container">Conectando à nuvem...</div>
 
     <script>
-        // Configuração Direta do Firebase
-        // Configuração COMPLETA do Firebase
-       // Configuração COMPLETA do Firebase
+        // Configuração COMPLETA e limpa do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBaoqTkIVcr-Bop8UWkexg7w3G-OAmvMjk",
             authDomain: "leblonprimepizza.firebaseapp.com",
@@ -57,10 +55,12 @@
             messagingSenderId: "292228771003",
             appId: "1:292228771003:web:c3431afe1725f6a1350d9e"
         };
+        
+        // Inicializa o Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Escuta os últimos 15 pedidos em tempo real
+        // Escuta os pedidos
         db.ref("pedidos_pendentes").limitToLast(15).on("value", (snapshot) => {
             const container = document.getElementById('pedidos-container');
             container.innerHTML = "";
@@ -71,7 +71,6 @@
                 const pedido = childSnapshot.val();
                 const key = childSnapshot.key;
                 
-                // Puxa o texto limpo para edição
                 const textoExibicao = pedido.textoPuro || pedido.texto; 
 
                 const card = document.createElement("div");
@@ -82,7 +81,6 @@
                     <textarea id="txt-${key}" class="edit-box">${textoExibicao}</textarea>
                     <button onclick="salvarEImprimir('${key}')">🖨️ Enviar para Impressora</button>
                 `;
-                // Insere no topo da lista
                 container.insertBefore(card, container.firstChild);
             });
 
@@ -96,7 +94,6 @@
             const cabecalho = document.getElementById('cfg-cabecalho').value;
             const linhas = parseInt(document.getElementById('cfg-linhas').value);
 
-            // Remonta com os códigos ESC/POS
             let textoFormatado = "\n\n\n";
             if (cabecalho) {
                 textoFormatado += \`\\x1B\\x61\\x01\\x1D\\x21\\x11\${cabecalho}\\n\\x1D\\x21\\x00\\x1B\\x61\\x00--------------------------------\\n\`;
@@ -105,11 +102,10 @@
             const quebras = "\n".repeat(linhas);
             textoFormatado += quebras;
 
-            // Atualiza direto na Nuvem
             db.ref("pedidos_pendentes/" + key).update({
                 textoPuro: novoTextoPuro,
                 texto: textoFormatado,
-                impresso: false // O Receptor vê isso e imprime de novo
+                impresso: false
             }).then(() => {
                 alert("Enviado para a impressora!");
             }).catch(err => {
