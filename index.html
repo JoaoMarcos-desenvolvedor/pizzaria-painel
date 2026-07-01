@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leblon Prime - Nuvem</title>
-    <!-- Bibliotecas Oficiais do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -39,7 +38,8 @@
             <select id="cfg-linhas">
                 <option value="5">5 linhas</option>
                 <option value="8">8 linhas</option>
-                <option value="14" selected>14 linhas (Padrão)</option>
+                <option value="12" selected>12 linhas (Padrão)</option>
+                <option value="14">14 linhas</option>
             </select>
         </div>
     </div>
@@ -102,13 +102,12 @@
             const novoTextoPuro = document.getElementById('txt-' + key).value;
             const linhas = parseInt(document.getElementById('cfg-linhas').value);
 
-            // Aplica a formatação gigante, quebrando em duas linhas para não bugar o layout
-            let textoFormatado = "\n\n\n";
+            // Removido os \n\n\n do começo para colar no topo
+            let textoFormatado = "";
             textoFormatado += `\x1B\x61\x01\x1D\x21\x11LEBLON PRIME\nPIZZA\x1D\x21\x00\n\x1B\x61\x00--------------------------------\n`;
             
             textoFormatado += novoTextoPuro;
             
-            // Adiciona as quebras de linha e o comando da guilhotina
             const quebras = "\n".repeat(linhas);
             textoFormatado += quebras;
             textoFormatado += "\x1B\x6D"; 
@@ -125,12 +124,8 @@
         }
 
         function excluirPedido(key) {
-            const confirmacao = confirm("Tem certeza que deseja apagar este pedido? Ele sumirá do painel e da nuvem.");
-            if (confirmacao) {
+            if (confirm("Tem certeza que deseja apagar este pedido? Ele sumirá do painel e da nuvem.")) {
                 db.ref("pedidos_pendentes/" + key).remove()
-                .then(() => {
-                    console.log("Pedido " + key + " apagado com sucesso.");
-                })
                 .catch(err => {
                     alert("Erro ao excluir: " + err.message);
                 });
