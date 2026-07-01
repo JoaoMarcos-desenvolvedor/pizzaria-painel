@@ -103,8 +103,8 @@
             const linhas = parseInt(document.getElementById('cfg-linhas').value);
 
             let textoFormatado = "";
-            // Incluído o recuo de 8 linhas logo após o título
-            textoFormatado += `\x1B\x61\x01\x1D\x21\x11LEBLON PRIME\nPIZZA\x1D\x21\x00${"\n".repeat(8)}\x1B\x61\x00--------------------------------\n`;
+            // Recuo elegante com apenas 2 quebras de linha (\n\n)
+            textoFormatado += `\x1B\x61\x01\x1D\x21\x11LEBLON PRIME\nPIZZA\x1D\x21\x00\n\n\x1B\x61\x00--------------------------------\n`;
             
             textoFormatado += novoTextoPuro;
             
